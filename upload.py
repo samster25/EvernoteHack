@@ -45,7 +45,9 @@ class EvernoteUploader(object):
 
     def save_notebook_return_guid(self, notebook):
         if notebook.name not in self.notebook_guid_by_name:
-            return self.note_store.createNotebook(notebook).guid
+            notebook = self.note_store.createNotebook(notebook)
+            self.notebook_guid_by_name[notebook.name] = notebook.guid
+            return notebook.guid
         return self.notebook_guid_by_name[notebook.name]
 
     def find_note(self, note):
@@ -59,9 +61,10 @@ class EvernoteUploader(object):
         return None
 
     def create_note(self, file_path, notebook_guid):
+        note = ttypes.Note()
         title = ntpath.basename(file_path)
         resource = self.create_resource_from_file(file_path)
-        hash_hex = binascii.hexlify(resource.data.bodyHash)
+        hash_hex = binascii.hexlify(self._hash)
 
         # The content of an Evernote note is represented using Evernote Markup Language
         # (ENML). The full ENML specification can be found in the Evernote API Overview
@@ -71,13 +74,11 @@ class EvernoteUploader(object):
             '"http://xml.evernote.com/pub/enml2.dtd">'
         content += '<en-note>'
         content += '<en-media type="' + resource.mime + '" hash="' + hash_hex + '"/>'
-        content += '</en-note>' 
-        note = ttypes.Note(
-            title=title,
-            content=content,
-            notebookGuid=notebook_guid,
-            resources=[resource]
-        )
+        content += '</en-note>'
+        note.resources = [resource]
+        note.title = title
+        note.content = content
+        note.notebookGuid = notebook_guid
         return note
 
     def save_note(self, note):
@@ -93,8 +94,9 @@ class EvernoteUploader(object):
     def create_resource_from_file(self, file_path):
         content = open(file_path, 'rb').read()
         md5 = hashlib.md5()
-        _hash = md5.digest()
         md5.update(content)
+        _hash = md5.digest()
+        self._hash = _hash
         data = ttypes.Data()
         data.size = len(content)
         data.bodyHash = _hash
