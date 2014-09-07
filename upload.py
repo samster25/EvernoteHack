@@ -64,7 +64,7 @@ class EvernoteUploader(object):
         note = ttypes.Note()
         title = ntpath.basename(file_path)
         resource = self.create_resource_from_file(file_path)
-        hash_hex = binascii.hexlify(resource.data.bodyHash)
+        hash_hex = binascii.hexlify(self._hash)
 
         # The content of an Evernote note is represented using Evernote Markup Language
         # (ENML). The full ENML specification can be found in the Evernote API Overview
@@ -94,8 +94,9 @@ class EvernoteUploader(object):
     def create_resource_from_file(self, file_path):
         content = open(file_path, 'rb').read()
         md5 = hashlib.md5()
-        _hash = md5.digest()
         md5.update(content)
+        _hash = md5.digest()
+        self._hash = _hash
         data = ttypes.Data()
         data.size = len(content)
         data.bodyHash = _hash
