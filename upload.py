@@ -24,6 +24,10 @@ class EvernoteUploader(object):
         notebook = self.create_notebook_from_directory(directory_path, parent_name=parent_name)
         notebook_guid = self.save_notebook_return_guid(notebook)
         for subfile in os.listdir(directory_path):
+            if subfile.startswith("."):
+                continue
+            if subfile.strip() != subfile:
+                continue
             full_subfile_path = os.path.join(directory_path, subfile)
             if os.path.isdir(full_subfile_path):
                 self.upload_directory_tree(full_subfile_path)
@@ -51,14 +55,18 @@ class EvernoteUploader(object):
         return self.notebook_guid_by_name[notebook.name]
 
     def find_note(self, note):
-        note_filter = notestore.NoteStore.NoteFilter()
-        note_filter.words = 'intitle:"%s"' % note.title
-        note_filter.notebookGuid = note.notebookGuid
-        # for now assuming no notes with duplicate titles
-        notesList = self.note_store.findNotes(note_filter, 0, 1)
-        if notesList.totalNotes > 0:
-            return notesList.notes[0]
-        return None
+        try:
+            note_filter = notestore.NoteStore.NoteFilter()
+            note_filter.words = 'intitle:"%s"' % note.title.strip()
+            note_filter.notebookGuid = note.notebookGuid
+            # for now assuming no notes with duplicate titles
+            notesList = self.note_store.findNotes(note_filter, 0, 1)
+            if notesList.totalNotes > 0:
+                return notesList.notes[0]
+            return None
+        except:
+            import pdb
+            pdb.set_trace()
 
     def create_note(self, file_path, notebook_guid):
         note = ttypes.Note()

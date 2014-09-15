@@ -5,13 +5,24 @@ import hashlib
 import time
 from BusAuc import getToken
 
+user = False
+
 def main():
 	monitorDir = "/Users/Sammy/Dropbox/EverBox"
 	# token = "S=s1:U=8f639:E=14fa45f98ae:C=1484cae6a60:P=1cd:A=en-devtoken:V=2:H=93c15bd8ccbff04139e1567f24ec179e"
 	# uploader = EvernoteUploader(token)
+
+
+	token = getToken()
+	uploader = EvernoteUploader(token)
+
 	while 1:
-		token = getToken()
-		uploader = EvernoteUploader(token)
+		# if user:
+		# 	pass
+		# else:
+		# 	token = getToken()
+		# 	uploader = EvernoteUploader(token)
+		print 'loop'
 		dirSting = json.dumps(list(os.walk(monitorDir)))
 		new_hash = dirSting.__hash__()
 		toCheck = open("hashDir","r")
